@@ -1,0 +1,13 @@
+{
+    "name": "intel-amt-toggle-power-example",
+    "description": "this is an example that toggles the power of a remote system",
+    "version": "0.1.0",
+    "license": "MIT",
+    "main": "intel-amt-toggle-power-example.js",
+    "dependencies": {
+        "archiver": "^4.0.2",
+        "meshcentral": "^0.6.9",
+        "meshcommander": "^0.8.8-a",
+        "otplib": "^10.2.3"
+    }
+}

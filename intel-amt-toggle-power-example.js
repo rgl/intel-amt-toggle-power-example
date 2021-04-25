@@ -2,7 +2,7 @@
 
 var settings = {
     hostname: "SET-WITH-YOUR-REMOTE-SYSTEM-IP-ADDRESS-OR-HOSTNAME",
-    tls: null,
+    tls: false,
     username: "admin",
     password: "SET-WITH-YOUR-REMOTE-SYSTEM-PASSWORD",
 };
@@ -132,18 +132,17 @@ function getDmtfPowerStateString(powerStateId) {
 
 class Amt {
     constructor(settings) {
-        const MeshCentralAmtWsman = require('meshcentral/amt/amt-wsman');
-        const MeshCentralAmtWsmanComm = require('meshcentral/amt/amt-wsman-comm');
-        const MeshCentralAmt = require('meshcentral/amt/amt');
-        const wsman = new MeshCentralAmtWsman(
-                MeshCentralAmtWsmanComm,
-                settings.hostname,
-                settings.tls ? 16993 : 16992,
-                settings.username,
-                settings.password,
-                settings.tls
-            );
-        this._amt = new MeshCentralAmt(wsman);
+        const CreateWsmanComm = require('meshcentral/amt/amt-wsman-comm');
+        const WsmanStackCreateService = require('meshcentral/amt/amt-wsman');
+        const AmtStackCreateService = require('meshcentral/amt/amt');
+        const comm = CreateWsmanComm(
+            settings.hostname,
+            settings.tls ? 16993 : 16992,
+            settings.username,
+            settings.password,
+            settings.tls ? 1 : 0);
+        const wsstack = WsmanStackCreateService(comm);
+        this._amt = AmtStackCreateService(wsstack);
         this._get = promisifyMeshCentralAmtGet(this._amt);
         this._exec = promisifyMeshCentralAmtExec(this._amt);
         this._enum = promisifyMeshCentralAmtEnum(this._amt);

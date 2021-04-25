@@ -1,7 +1,7 @@
 {
     "name": "intel-amt-toggle-power-example",
     "description": "this is an example that toggles the power of a remote system",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "main": "intel-amt-toggle-power-example.js",
     "repository": {

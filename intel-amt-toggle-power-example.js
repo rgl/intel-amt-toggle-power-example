@@ -1,5 +1,7 @@
 #!/usr/bin/node
 
+"use strict";
+
 var settings = {
     hostname: "SET-WITH-YOUR-REMOTE-SYSTEM-IP-ADDRESS-OR-HOSTNAME",
     tls: false,
@@ -91,6 +93,10 @@ function promisifyMeshCentralAmtRequestPowerStateChange(amt) {
     };
 }
 
+function sleep(ms) {
+    return new Promise((resolve, _reject) => setTimeout(resolve, ms));
+}
+
 // see https://github.com/intel/lms/blob/f7c374745ae7efb3ed7860fdc3f8abbb52dc9f8f/CIM_Framework/CIMFramework/CPPClasses/Include/CIM_AssociatedPowerManagementService.h#L143-L159
 // see https://schemas.dmtf.org/wbem/cim-html/2.49.0/CIM_AssociatedPowerManagementService.html
 // see https://software.intel.com/sites/manageability/AMT_Implementation_and_Reference_Guide/default.htm?turl=HTMLDocuments%2FWS-Management_Class_Reference%2FCIM_AssociatedPowerManagementService.htm
@@ -132,6 +138,7 @@ function getDmtfPowerStateString(powerStateId) {
 
 class Amt {
     constructor(settings) {
+        this._amtUrl = `http${settings.tls ? 's' : ''}://${settings.hostname}:${settings.tls ? 16993 : 16992}`;
         const CreateWsmanComm = require('meshcentral/amt/amt-wsman-comm');
         const WsmanStackCreateService = require('meshcentral/amt/amt-wsman');
         const AmtStackCreateService = require('meshcentral/amt/amt');
@@ -147,6 +154,10 @@ class Amt {
         this._exec = promisifyMeshCentralAmtExec(this._amt);
         this._enum = promisifyMeshCentralAmtEnum(this._amt);
         this._requestPowerStateChange = promisifyMeshCentralAmtRequestPowerStateChange(this._amt);
+    }
+
+    getAmtUrl() {
+        return this._amtUrl;
     }
 
     async getVersion() {
@@ -247,6 +258,7 @@ async function main() {
     var powerState = await amt.getPowerState();
     var availablePowerStates = await amt.getAvailablePowerStates();
 
+    console.log("amtUrl:", amt.getAmtUrl());
     console.log("systemId:", systemId);
     console.log("time:", time);
     console.log("version:", version);
@@ -263,6 +275,9 @@ async function main() {
     const togglePower = true;
 
     if (togglePower) {
+        var togglePowerState;
+        var desiredPowerState;
+
         // toggle the power state.
         // NB setPowerState can set a powerState that is in availablePowerStates array.
         // NB DmtfPowerStateOffSoft will abruptly power down the system.
@@ -290,14 +305,39 @@ async function main() {
             //          The system is going down for poweroff at Tue 2020-08-18 22:01:40 WEST!
             //          ago 18 22:00:40 vagrant systemd-logind[574]: Creating /run/nologin, blocking further logins...
             //          ago 18 22:00:40 vagrant LMS[568]: Remote administrator shutdown request was executed
-            const powerOffStateId = availablePowerStates.includes(DmtfPowerStateOffSoftGraceful) 
+            // NB when we request a DmtfPowerStateOffSoftGraceful transition, AMT will actually report
+            //    DmtfPowerStateOffSoft when its done.
+            togglePowerState = availablePowerStates.includes(DmtfPowerStateOffSoftGraceful) 
                 && DmtfPowerStateOffSoftGraceful
                 || DmtfPowerStateOffSoft;
-            console.log(`Powering Off with ${getDmtfPowerStateString(powerOffStateId)}...`);
-            await amt.setPowerState(powerOffStateId);
+            desiredPowerState = DmtfPowerStateOffSoft;
         } else {
-            console.log(`Powering On with ${getDmtfPowerStateString(DmtfPowerStateOn)}...`);
-            await amt.setPowerState(DmtfPowerStateOn);
+            togglePowerState = DmtfPowerStateOn;
+            desiredPowerState = DmtfPowerStateOn;
+        }
+
+        // bail when the desired state is not available.
+        // NB off states are not available when KVM or IDER are active.
+        if (!availablePowerStates.includes(togglePowerState)) {
+            throw new Error(`The desired power state ${getDmtfPowerStateString(togglePowerState)} is not currently available. Only these are: ${JSON.stringify(availablePowerStates.map(getDmtfPowerStateString))}.`);
+        }
+
+        // toggle to the desired power state.
+        console.log(`Toggling the power state from ${getDmtfPowerStateString(powerState)} to ${getDmtfPowerStateString(togglePowerState)}...`);
+        await amt.setPowerState(togglePowerState);
+
+        // wait for the desired power state.
+        for (var lastPowerState = null; ; ) {
+            var powerState = await amt.getPowerState();
+            if (powerState == desiredPowerState) {
+                console.log(`The power state is now ${getDmtfPowerStateString(powerState)}.`);
+                break;
+            }
+            if (powerState != lastPowerState) {
+                console.log(`Waiting for the power state to change from ${getDmtfPowerStateString(powerState)} to ${getDmtfPowerStateString(desiredPowerState)}...`);
+                lastPowerState = powerState;
+            }
+            await sleep(1000);
         }
     }
 }

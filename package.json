@@ -9,7 +9,7 @@
         "url": "https://github.com/rgl/intel-amt-toggle-power-example.git"
     },
     "dependencies": {
-        "meshcentral": "^0.8.19",
+        "meshcentral": "^0.8.67",
         "meshcommander": "^0.9.0-d"
     }
 }

@@ -1,6 +1,7 @@
 {
     "name": "intel-amt-toggle-power-example",
     "description": "this is an example that toggles the power of a remote system",
+    "type": "module",
     "version": "0.2.0",
     "license": "MIT",
     "main": "intel-amt-toggle-power-example.js",
@@ -9,7 +10,7 @@
         "url": "https://github.com/rgl/intel-amt-toggle-power-example.git"
     },
     "dependencies": {
-        "meshcentral": "^0.8.67",
-        "meshcommander": "^0.9.0-d"
+        "meshcentral": "^1.1.16",
+        "meshcommander": "^0.9.5-a"
     }
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/node
 
-"use strict";
+import CreateWsmanComm from 'meshcentral/amt/amt-wsman-comm.js';
+import WsmanStackCreateService from 'meshcentral/amt/amt-wsman.js';
+import AmtStackCreateService from 'meshcentral/amt/amt.js';
 
 var settings = {
     hostname: "SET-WITH-YOUR-REMOTE-SYSTEM-IP-ADDRESS-OR-HOSTNAME",
@@ -139,9 +141,6 @@ function getDmtfPowerStateString(powerStateId) {
 class Amt {
     constructor(settings) {
         this._amtUrl = `http${settings.tls ? 's' : ''}://${settings.hostname}:${settings.tls ? 16993 : 16992}`;
-        const CreateWsmanComm = require('meshcentral/amt/amt-wsman-comm');
-        const WsmanStackCreateService = require('meshcentral/amt/amt-wsman');
-        const AmtStackCreateService = require('meshcentral/amt/amt');
         const comm = CreateWsmanComm(
             settings.hostname,
             settings.tls ? 16993 : 16992,
@@ -296,9 +295,9 @@ async function main() {
             //    X minutes of being powered on, we would allow/consider abruptly powering
             //    off the system.
             //    TODO see which API returns how long the system has power.
-            // NB A gracefull stop is normally delayed by LMS, that is, LMS schedules a
+            // NB A graceful stop is normally delayed by LMS, that is, LMS schedules a
             //    shutdown to happen in the near future (1m).
-            //    TODO see how can we configure that behaviour.
+            //    TODO see how can we configure that behavior.
             //    In my case, this was seen with journalctl:
             //          Broadcast message from root@vagrant (Tue 2020-08-18 22:00:40 WEST):
             //          The remote administrator has initiated a shutdown on this computer...
@@ -342,4 +341,6 @@ async function main() {
     }
 }
 
-main().then(() => process.exit(0)).catch((error) => {console.log("Error:", error); process.exit(1);});
+await main();
+
+process.exit(0);

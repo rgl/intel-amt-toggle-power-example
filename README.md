@@ -8,12 +8,12 @@ Provision AMT as described in [rgl/intel-amt-notes](https://github.com/rgl/intel
 
 **NB** To be able to do a Graceful Shutdown/Reboot you must have the [Intel LMS (Local Manageability Service)](https://github.com/intel/lms) running in the OS.
 
-Install [node.js](https://nodejs.org/).
+Install [Node.js 20.10](https://nodejs.org/).
 
 Install the required dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Edit the `intel-amt-toggle-power-example.js` file and modify the

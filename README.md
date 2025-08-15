@@ -8,7 +8,7 @@ Provision AMT as described in [rgl/intel-amt-notes](https://github.com/rgl/intel
 
 **NB** To be able to do a Graceful Shutdown/Reboot you must have the [Intel LMS (Local Manageability Service)](https://github.com/intel/lms) running in the OS.
 
-Install [Node.js 20.10](https://nodejs.org/).
+Install [Node.js 22](https://nodejs.org/).
 
 Install the required dependencies:
 
